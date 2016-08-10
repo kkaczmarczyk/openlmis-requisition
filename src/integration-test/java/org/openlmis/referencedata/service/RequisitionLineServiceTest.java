@@ -101,9 +101,11 @@ public class RequisitionLineServiceTest {
 
   private Requisition requisition = new Requisition();
 
-  private Requisition secondRequisition = new Requisition();
-
   private Program program;
+
+  private Facility facility = new Facility();
+
+  private Period period = new Period();
 
   private Product product;
 
@@ -123,9 +125,18 @@ public class RequisitionLineServiceTest {
     requisitionTemplate.setColumnsMap(requisitionTemplateColumnHashMap);
     requisitionTemplateRepository.save(requisitionTemplate);
 
-    requisitionLineService.initiateRequisitionLineFields(secondRequisition);
+    Requisition firstRequisition = createTestRequisition(facility, period, program,
+        RequisitionStatus.INITIATED);
+    requisitionRepository.save(firstRequisition);
+    RequisitionLine firstRequisitionLine
+        = createTestRequisitionLine(product, 10, 20, firstRequisition);
+    requisitionLineRepository.save(firstRequisitionLine);
+    firstRequisition.setRequisitionLines(new HashSet<>(Arrays.asList(firstRequisitionLine)));
+    requisitionRepository.save(firstRequisition);
 
-    RequisitionLine requisitionLine = secondRequisition.getRequisitionLines().iterator().next();
+    requisitionLineService.initiateRequisitionLineFields(requisition);
+
+    RequisitionLine requisitionLine = requisition.getRequisitionLines().iterator().next();
 
     Assert.assertEquals(20, requisitionLine.getBeginningBalance().intValue());
   }
@@ -141,9 +152,18 @@ public class RequisitionLineServiceTest {
     requisitionTemplate.setColumnsMap(requisitionTemplateColumnHashMap);
     requisitionTemplateRepository.save(requisitionTemplate);
 
-    RequisitionLine requisitionLine = secondRequisition.getRequisitionLines().iterator().next();
+    Requisition firstRequisition = createTestRequisition(facility, period, program,
+        RequisitionStatus.INITIATED);
+    requisitionRepository.save(firstRequisition);
+    RequisitionLine firstRequisitionLine
+        = createTestRequisitionLine(product, 10, 20, firstRequisition);
+    requisitionLineRepository.save(firstRequisitionLine);
+    firstRequisition.setRequisitionLines(new HashSet<>(Arrays.asList(firstRequisitionLine)));
+    requisitionRepository.save(firstRequisition);
+
+    RequisitionLine requisitionLine = requisition.getRequisitionLines().iterator().next();
     requisitionLine.setBeginningBalance(222);
-    requisitionLineService.save(requisition, requisitionLine);
+    requisitionLineService.save(firstRequisition, requisitionLine);
 
     Assert.assertEquals(20, requisitionLine.getBeginningBalance().intValue());
   }
@@ -159,9 +179,9 @@ public class RequisitionLineServiceTest {
     requisitionTemplate.setColumnsMap(requisitionTemplateColumnHashMap);
     requisitionTemplateRepository.save(requisitionTemplate);
 
-    requisitionLineService.initiateRequisitionLineFields(secondRequisition);
+    requisitionLineService.initiateRequisitionLineFields(requisition);
 
-    RequisitionLine requisitionLine = secondRequisition.getRequisitionLines().iterator().next();
+    RequisitionLine requisitionLine = requisition.getRequisitionLines().iterator().next();
 
     Assert.assertEquals(0, requisitionLine.getBeginningBalance().intValue());
   }
@@ -181,10 +201,10 @@ public class RequisitionLineServiceTest {
     requisitionTemplate.setColumnsMap(requisitionTemplateColumnHashMap);
     requisitionTemplateRepository.save(requisitionTemplate);
 
-    requisitionLineService.initiateRequisitionLineFields(secondRequisition);
+    requisitionLineService.initiateRequisitionLineFields(requisition);
 
     List<RequisitionTemplate> requisitionTemplateList
-        = requisitionTemplateService.searchRequisitionTemplates(secondRequisition.getProgram());
+        = requisitionTemplateService.searchRequisitionTemplates(requisition.getProgram());
     Assert.assertEquals(1 ,requisitionTemplateList.size());
     Map<String, RequisitionTemplateColumn> testRequisitionTemplateColumnHashMap
         = requisitionTemplateList.get(0).getColumnsMap();
@@ -198,18 +218,13 @@ public class RequisitionLineServiceTest {
 
   @Test
   public void testSearchRequisitionLines() {
-    requisitionLineRepository.deleteAll();
-    RequisitionLine requisitionLine = createTestRequisitionLine(product, 10, 20, requisition);
-    requisitionLineRepository.save(requisitionLine);
-
     List<RequisitionLine> receivedRequisitionLines = requisitionLineService.searchRequisitionLines(
-        requisitionLine.getRequisition(), null);
+        requisition, null);
     Assert.assertEquals(1, receivedRequisitionLines.size());
 
-    Requisition expectedRequisition = requisitionLine.getRequisition();
     Requisition receivedRequisition = receivedRequisitionLines.get(0).getRequisition();
 
-    Assert.assertEquals(expectedRequisition.getId(), receivedRequisition.getId());
+    Assert.assertEquals(requisition.getId(), receivedRequisition.getId());
   }
 
   private void createTestRequisition() {
@@ -248,7 +263,6 @@ public class RequisitionLineServiceTest {
     geographicZoneRepository.save(geographicZone);
 
 
-    Facility facility = new Facility();
     facility.setType(facilityType);
     facility.setGeographicZone(geographicZone);
     facility.setCode(REQUISITION_REPOSITORY_NAME);
@@ -261,31 +275,23 @@ public class RequisitionLineServiceTest {
     schedule.setName("name");
     scheduleRepository.save(schedule);
 
-    Period period = createTestPeriod("description", "name1", schedule,
+    period = createTestPeriod("description", "name1", schedule,
         LocalDate.of(2016, 1 , 1), LocalDate.of(2016, 2, 1));
     Period secondPeriod = createTestPeriod("description", "name2", schedule,
         LocalDate.of(2016, 2 , 1), LocalDate.of(2016, 3, 1));
     periodRepository.save(period);
     periodRepository.save(secondPeriod);
 
-    requisition = createTestRequisition(facility, period, program,
+    requisition = createTestRequisition(facility, secondPeriod, program,
         RequisitionStatus.INITIATED);
-    secondRequisition = createTestRequisition(facility, secondPeriod, program,
-        RequisitionStatus.INITIATED);
-    requisitionRepository.save(secondRequisition);
     requisitionRepository.save(requisition);
 
-    RequisitionLine requisitionLine = createTestRequisitionLine(product, 10, 20, requisition);
-    RequisitionLine secondRequisitionLine = createTestRequisitionLine(
-        product, 100, 50, secondRequisition);
+    RequisitionLine requisitionLine = createTestRequisitionLine(
+        product, 100, 50, requisition);
     requisitionLineRepository.save(requisitionLine);
-    requisitionLineRepository.save(secondRequisitionLine);
 
     requisition.setRequisitionLines(new HashSet<>(Arrays.asList(requisitionLine)));
-    secondRequisition.setRequisitionLines(new HashSet<>(Arrays.asList(secondRequisitionLine)));
     requisitionRepository.save(requisition);
-    requisitionRepository.save(secondRequisition);
-
   }
 
   private Requisition createTestRequisition(
