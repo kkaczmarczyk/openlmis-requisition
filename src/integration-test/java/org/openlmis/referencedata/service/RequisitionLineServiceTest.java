@@ -109,6 +109,8 @@ public class RequisitionLineServiceTest {
 
   private Schedule schedule;
 
+  private Period period;
+
   @Before
   public void setUp() {
     createTestRequisition();
@@ -125,10 +127,10 @@ public class RequisitionLineServiceTest {
     requisitionTemplate.setColumnsMap(requisitionTemplateColumnHashMap);
     requisitionTemplateRepository.save(requisitionTemplate);
 
-    Period period = createTestPeriod("description", "name1", schedule,
-        LocalDate.of(2016, 1 , 1), LocalDate.of(2016, 2, 1));
-    periodRepository.save(period);
-    Requisition priorRequisition = createTestRequisition(facility, period, program,
+    Period priorPeriod = createTestPeriod("description", "name1", schedule,
+        period.getStartDate().minusMonths(1), period.getEndDate().minusMonths(1));
+    periodRepository.save(priorPeriod);
+    Requisition priorRequisition = createTestRequisition(facility, priorPeriod, program,
         RequisitionStatus.INITIATED);
     requisitionRepository.save(priorRequisition);
     RequisitionLine priorRequisitionLine
@@ -155,10 +157,10 @@ public class RequisitionLineServiceTest {
     requisitionTemplate.setColumnsMap(requisitionTemplateColumnHashMap);
     requisitionTemplateRepository.save(requisitionTemplate);
 
-    Period period = createTestPeriod("description", "name1", schedule,
-        LocalDate.of(2016, 1 , 1), LocalDate.of(2016, 2, 1));
-    periodRepository.save(period);
-    Requisition priorRequisition = createTestRequisition(facility, period, program,
+    Period priorPeriod = createTestPeriod("description", "name1", schedule,
+        period.getStartDate().minusMonths(1), period.getEndDate().minusMonths(1));
+    periodRepository.save(priorPeriod);
+    Requisition priorRequisition = createTestRequisition(facility, priorPeriod, program,
         RequisitionStatus.INITIATED);
     requisitionRepository.save(priorRequisition);
     RequisitionLine priorRequisitionLine
@@ -281,7 +283,7 @@ public class RequisitionLineServiceTest {
     schedule.setName("name");
     scheduleRepository.save(schedule);
 
-    Period period = createTestPeriod("description", "name2", schedule,
+    period = createTestPeriod("description", "name2", schedule,
         LocalDate.of(2016, 2 , 1), LocalDate.of(2016, 3, 1));
 
     periodRepository.save(period);
