@@ -99,15 +99,15 @@ public class RequisitionLineServiceTest {
   @Autowired
   private ProductCategoryRepository productCategoryRepository;
 
-  private Requisition requisition = new Requisition();
+  private Requisition requisition;
 
   private Program program;
 
-  private Facility facility = new Facility();
-
-  private Period period = new Period();
+  private Facility facility;
 
   private Product product;
+
+  private Schedule schedule;
 
   @Before
   public void setUp() {
@@ -125,14 +125,17 @@ public class RequisitionLineServiceTest {
     requisitionTemplate.setColumnsMap(requisitionTemplateColumnHashMap);
     requisitionTemplateRepository.save(requisitionTemplate);
 
-    Requisition firstRequisition = createTestRequisition(facility, period, program,
+    Period period = createTestPeriod("description", "name1", schedule,
+        LocalDate.of(2016, 1 , 1), LocalDate.of(2016, 2, 1));
+    periodRepository.save(period);
+    Requisition priorRequisition = createTestRequisition(facility, period, program,
         RequisitionStatus.INITIATED);
-    requisitionRepository.save(firstRequisition);
-    RequisitionLine firstRequisitionLine
-        = createTestRequisitionLine(product, 10, 20, firstRequisition);
-    requisitionLineRepository.save(firstRequisitionLine);
-    firstRequisition.setRequisitionLines(new HashSet<>(Arrays.asList(firstRequisitionLine)));
-    requisitionRepository.save(firstRequisition);
+    requisitionRepository.save(priorRequisition);
+    RequisitionLine priorRequisitionLine
+        = createTestRequisitionLine(product, 10, 20, priorRequisition);
+    requisitionLineRepository.save(priorRequisitionLine);
+    priorRequisition.setRequisitionLines(new HashSet<>(Arrays.asList(priorRequisitionLine)));
+    requisitionRepository.save(priorRequisition);
 
     requisitionLineService.initiateRequisitionLineFields(requisition);
 
@@ -152,18 +155,21 @@ public class RequisitionLineServiceTest {
     requisitionTemplate.setColumnsMap(requisitionTemplateColumnHashMap);
     requisitionTemplateRepository.save(requisitionTemplate);
 
-    Requisition firstRequisition = createTestRequisition(facility, period, program,
+    Period period = createTestPeriod("description", "name1", schedule,
+        LocalDate.of(2016, 1 , 1), LocalDate.of(2016, 2, 1));
+    periodRepository.save(period);
+    Requisition priorRequisition = createTestRequisition(facility, period, program,
         RequisitionStatus.INITIATED);
-    requisitionRepository.save(firstRequisition);
-    RequisitionLine firstRequisitionLine
-        = createTestRequisitionLine(product, 10, 20, firstRequisition);
-    requisitionLineRepository.save(firstRequisitionLine);
-    firstRequisition.setRequisitionLines(new HashSet<>(Arrays.asList(firstRequisitionLine)));
-    requisitionRepository.save(firstRequisition);
+    requisitionRepository.save(priorRequisition);
+    RequisitionLine priorRequisitionLine
+        = createTestRequisitionLine(product, 10, 20, priorRequisition);
+    requisitionLineRepository.save(priorRequisitionLine);
+    priorRequisition.setRequisitionLines(new HashSet<>(Arrays.asList(priorRequisitionLine)));
+    requisitionRepository.save(priorRequisition);
 
     RequisitionLine requisitionLine = requisition.getRequisitionLines().iterator().next();
     requisitionLine.setBeginningBalance(222);
-    requisitionLineService.save(firstRequisition, requisitionLine);
+    requisitionLineService.save(priorRequisition, requisitionLine);
 
     Assert.assertEquals(20, requisitionLine.getBeginningBalance().intValue());
   }
@@ -262,7 +268,7 @@ public class RequisitionLineServiceTest {
     geographicZone.setLevel(level);
     geographicZoneRepository.save(geographicZone);
 
-
+    facility = new Facility();
     facility.setType(facilityType);
     facility.setGeographicZone(geographicZone);
     facility.setCode(REQUISITION_REPOSITORY_NAME);
@@ -270,19 +276,18 @@ public class RequisitionLineServiceTest {
     facility.setEnabled(true);
     facilityRepository.save(facility);
 
-    Schedule schedule = new Schedule();
+    schedule = new Schedule();
     schedule.setCode("code");
     schedule.setName("name");
     scheduleRepository.save(schedule);
 
-    period = createTestPeriod("description", "name1", schedule,
-        LocalDate.of(2016, 1 , 1), LocalDate.of(2016, 2, 1));
-    Period secondPeriod = createTestPeriod("description", "name2", schedule,
+    Period period = createTestPeriod("description", "name2", schedule,
         LocalDate.of(2016, 2 , 1), LocalDate.of(2016, 3, 1));
-    periodRepository.save(period);
-    periodRepository.save(secondPeriod);
 
-    requisition = createTestRequisition(facility, secondPeriod, program,
+    periodRepository.save(period);
+
+    requisition = new Requisition();
+    requisition = createTestRequisition(facility, period, program,
         RequisitionStatus.INITIATED);
     requisitionRepository.save(requisition);
 
