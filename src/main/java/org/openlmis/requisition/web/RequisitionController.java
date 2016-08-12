@@ -238,10 +238,21 @@ public class RequisitionController {
    * Get requisitions to approve for right supervisor.
    */
   @RequestMapping(value = "/requisitions/requisitions-for-approval", method = RequestMethod.GET)
-  public ResponseEntity<Object> listForApproval(OAuth2Authentication auth) {
+  public ResponseEntity<?> listForApproval(OAuth2Authentication auth) {
     User user = (User) auth.getPrincipal();
-    List<Requisition> requisitions = requisitionService.getRequisitionsForApproval(user.getId());
-    return new ResponseEntity<>(requisitions, HttpStatus.OK);
+    List<Requisition> requisitionsForApproval
+        = requisitionService.getRequisitionsForApproval(user.getId());
+    /* if(requisitions != null) {
+      requisitions.get(0).setSupervisoryNode(null);
+      requisitions.get(0).setFacility(null);
+      requisitions.get(0).setRequisitionLines(null);
+    }
+
+    // List<Requisition> result = requisitionService.searchRequisitions(null, null,
+    //    null, null, null, null, RequisitionStatus.AUTHORIZED);*/
+    MappingJacksonValue value = new MappingJacksonValue(requisitionsForApproval);
+    value.setSerializationView(View.BasicInformation.class);
+    return new ResponseEntity<>(value, HttpStatus.OK);
   }
 
   private Map<String, String> getRequisitionErrors(BindingResult bindingResult) {

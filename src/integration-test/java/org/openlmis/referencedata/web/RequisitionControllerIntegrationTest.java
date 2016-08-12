@@ -45,6 +45,7 @@ import org.openlmis.requisition.domain.RequisitionLine;
 import org.openlmis.requisition.domain.RequisitionStatus;
 import org.openlmis.requisition.repository.RequisitionLineRepository;
 import org.openlmis.requisition.repository.RequisitionRepository;
+import org.openlmis.requisition.service.RequisitionService;
 import org.openlmis.settings.domain.ConfigurationSetting;
 import org.openlmis.settings.repository.ConfigurationSettingRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -54,6 +55,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponents;
@@ -75,6 +77,7 @@ public class RequisitionControllerIntegrationTest extends BaseWebIntegrationTest
   private static final String RAML_ASSERT_MESSAGE = "HTTP request/response should match RAML "
           + "definition.";
   private static final String EXPECTED_MESSAGE_FIRST_PART = "{\n  \"requisitionLines\" : ";
+  private static final String ACCESS_TOKEN = "access_token";
   private final String insertComment = addTokenToUrl(BASE_URL + "/api/requisitions/{id}/comments");
   private final String approveRequisition =
           addTokenToUrl(BASE_URL + "/api/requisitions/{id}/approve");
@@ -87,7 +90,12 @@ public class RequisitionControllerIntegrationTest extends BaseWebIntegrationTest
   private final String deleteUrl = addTokenToUrl(BASE_URL + "/api/requisitions/{id}");
   private final String searchUrl = addTokenToUrl(BASE_URL + "/api/requisitions/search");
   private final String initiateUrl = addTokenToUrl(BASE_URL + "/api/requisitions/initiate");
+  private final String requisitionForApprovalUrl = addTokenToUrl(
+      BASE_URL + "/api/requisitions/requisitions-for-approval");
   private static final String COMMENT_TEXT_FIELD_NAME = "body";
+
+  @Autowired
+  private RequisitionService requisitionService;
 
   @Autowired
   private ProductRepository productRepository;
@@ -156,8 +164,6 @@ public class RequisitionControllerIntegrationTest extends BaseWebIntegrationTest
     RestAssured.baseURI = BASE_URL;
     ramlDefinition = RamlLoaders.fromClasspath().load("api-definition-raml.yaml");
     restAssured = ramlDefinition.createRestAssured();
-
-    cleanUp();
 
     ProductCategory productCategory1 = new ProductCategory();
     productCategory1.setCode("PC1");
@@ -260,8 +266,6 @@ public class RequisitionControllerIntegrationTest extends BaseWebIntegrationTest
     Set<RequisitionLine> requisitionLines = new HashSet<>();
     requisitionLines.add(requisitionLine);
 
-    user = userRepository.findOne(INITIAL_USER_ID);
-
     requisition.setRequisitionLines(requisitionLines);
     requisition = requisitionRepository.save(requisition);
 
@@ -294,6 +298,11 @@ public class RequisitionControllerIntegrationTest extends BaseWebIntegrationTest
     supervisoryNode.setDescription("description");
     supervisoryNode.setFacility(facility);
     supervisoryNodeRepository.save(supervisoryNode);
+
+    user = userRepository.findOne(INITIAL_USER_ID);
+    user.setSupervisedNode(supervisoryNode);
+    userRepository.save(user);
+
     requisition.setSupervisoryNode(supervisoryNode);
     requisition.setCreatedDate(localDateTime);
     requisition2.setSupervisoryNode(supervisoryNode);
@@ -310,6 +319,8 @@ public class RequisitionControllerIntegrationTest extends BaseWebIntegrationTest
 
   @After
   public void cleanUp() {
+    user.setSupervisedNode(null);
+    userRepository.save(user);
     commentRepository.deleteAll();
     requisitionLineRepository.deleteAll();
     productRepository.deleteAll();
@@ -739,6 +750,29 @@ public class RequisitionControllerIntegrationTest extends BaseWebIntegrationTest
 
     Assert.assertEquals("First comment", comments.get(0).get(COMMENT_TEXT_FIELD_NAME));
     Assert.assertEquals("Second comment", comments.get(1).get(COMMENT_TEXT_FIELD_NAME));
+  }
+
+  @Test
+  @Transactional
+  public void getRequisitionsForApprovalTest() {
+    requisition.setStatus(RequisitionStatus.AUTHORIZED);
+    requisitionRepository.save(requisition);
+
+    List<Requisition> requisitionList = requisitionService.getRequisitionsForApproval(user.getId());
+    List<Requisition> result = requisitionService.searchRequisitions(null, null,
+        null, null, null, null, RequisitionStatus.AUTHORIZED);
+
+    Requisition response = restAssured.given()
+        .when()
+        .get(requisitionForApprovalUrl).as(Requisition.class);
+
+    int integer = 1;
+    /*Assert.assertEquals(1,response.length);
+    assertThat(RAML_ASSERT_MESSAGE , restAssured.getLastReport(), RamlMatchers.hasNoViolations());
+    for (Requisition requisition : response) {
+      Assert.assertEquals(requisition.getSupervisoryNode().getId(), supervisoryNode.getId());
+      Assert.assertEquals(requisition.getStatus(), RequisitionStatus.AUTHORIZED);
+    }*/
   }
 
   @Test

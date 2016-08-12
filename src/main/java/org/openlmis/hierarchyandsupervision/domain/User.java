@@ -46,11 +46,11 @@ public class User extends BaseEntity {
   @Setter
   private String lastName;
 
-  @ManyToOne
+  /*@ManyToOne
   @JoinColumn(name = "supervisoryNodeId")
   @Getter
   @Setter
-  private SupervisoryNode supervisedNode; //TODO Role based access control for Requisitions
+  private SupervisoryNode supervisedNode; //TODO Role based access control for Requisitions*/
 
   @ManyToOne
   @JoinColumn(name = "facilityid")

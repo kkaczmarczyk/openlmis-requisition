@@ -1,6 +1,7 @@
 package org.openlmis.requisition.domain;
 
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -15,6 +16,7 @@ import org.openlmis.referencedata.domain.Comment;
 import org.openlmis.referencedata.domain.Facility;
 import org.openlmis.referencedata.domain.Period;
 import org.openlmis.referencedata.domain.Program;
+import org.openlmis.view.View;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -37,6 +39,7 @@ import javax.persistence.Table;
 @NoArgsConstructor
 public class Requisition extends BaseEntity {
 
+  @JsonView(View.BasicInformation.class)
   @JsonSerialize(using = LocalDateTimeSerializer.class)
   @JsonDeserialize(using = LocalDateTimeDeserializer.class)
   @Getter

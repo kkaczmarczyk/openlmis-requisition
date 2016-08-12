@@ -251,7 +251,8 @@ schemas:
               "status": { "type": "string", "required": true, "title": "status" },
               "emergency": { "type": "boolean", "required": true, "title": "emergency" },
               "creator": { "type": "object", "$ref": "#/schemas/user", "required": false, "title": "creator" },
-              "requisitionLines": { "type": "array", "required": false, "title": "requisitionLines", "items": { "type": "object", "$ref":"#/schemas/requisitionLine" }, "uniqueItems": false }
+              "requisitionLines": { "type": "array", "required": false, "title": "requisitionLines", "items": { "type": "object", "$ref":"#/schemas/requisitionLine" }, "uniqueItems": false },
+              "supervisoryNode": { "type": "object", "$ref": "#/schemas/supervisoryNode", "required": true }
           }
       }
 
@@ -354,7 +355,8 @@ schemas:
               "homeFacility": { "type": "object", "$ref": "#/schemas/facility", "required": false, "title": "homeFacility" },
               "verified": { "type": "boolean", "required": false, "title": "verified" },
               "active": { "type": "boolean", "required": false, "title": "active" },
-              "roles": { "type": "array", "required": false, "title": "roles", "items": { "type": "object", "$ref": "#/schemas/role" }, "uniqueItems": false}
+              "roles": { "type": "array", "required": false, "title": "roles", "items": { "type": "object", "$ref": "#/schemas/role" }, "uniqueItems": false},
+              "supervisoryNode": { "type": "object", "$ref": "#/schemas/supervisoryNode", "required": false }
           }
       }
 

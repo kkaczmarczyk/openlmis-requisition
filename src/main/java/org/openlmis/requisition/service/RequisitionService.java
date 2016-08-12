@@ -233,9 +233,9 @@ public class RequisitionService {
   public List<Requisition> getRequisitionsForApproval(UUID userId) {
     User user = userRepository.findOne(userId);
     List<Requisition> requisitionsForApproval = new ArrayList<>();
-    if (user.getSupervisedNode() != null) {
+    /*if (user.getSupervisedNode() != null) {
       requisitionsForApproval.addAll(getAuthorizedRequisitions(user.getSupervisedNode()));
-    }
+    }*/
     return requisitionsForApproval;
   }
 
